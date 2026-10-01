@@ -87,9 +87,13 @@ def _remember(result):
 		).insert(ignore_permissions=True, set_name=name)
 	except frappe.DuplicateEntryError:
 		frappe.db.rollback(save_point="technominds_shadow_receipt")
-		# Locking read sees the winning receipt under MariaDB's repeatable-read isolation.
-		stored_output = frappe.db.sql(
-			"select output from `tabIntegration Request` where name=%s for update", name
+		# Current shared read sees the winner without upgrading duplicate-insert shared locks.
+		stored_output = frappe.db.multisql(
+			{
+				"mariadb": "select output from `tabIntegration Request` where name=%s lock in share mode",
+				"postgres": 'select output from "tabIntegration Request" where name=%s for share',
+			},
+			name,
 		)
 		if not stored_output:
 			frappe.throw("The concurrent shadow receipt could not be reconciled")

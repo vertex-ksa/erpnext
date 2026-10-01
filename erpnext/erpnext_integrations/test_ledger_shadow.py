@@ -113,7 +113,7 @@ class TestLedgerShadow(ERPNextTestSuite):
 				"period_name": "TM Shadow Closed Period",
 				"company": self.company.name,
 				"start_date": "2026-01-01",
-				"end_date": "2026-12-31",
+				"end_date": self.batch["posting_date"],
 				"closed_documents": [{"document_type": "Journal Entry", "closed": 1}],
 			}
 		).insert()
